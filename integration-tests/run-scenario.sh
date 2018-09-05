@@ -17,7 +17,7 @@
 #set -e
 #set -o xtrace
 
-DIR=/home/vasanthan/Downloads/sp/docker-sp/docker-sp/dockerfiles/base
+DIR=$2
 FILE1=${DIR}/infrastructure.properties
 FILE2=${DIR}/testplan-props.properties
 
@@ -67,7 +67,6 @@ if [ "${db_url}" != "" ]
 then
 
 	DIR1=${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files
-	echo "$DIR1"
 
 	sed -i '/username:/ s/: .*/: '$db_username'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
 	sed -i '/password:/ s/: .*/: '$db_password'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
@@ -94,10 +93,10 @@ then
 fi
 
 #run docker-create
-#sh ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-create.sh ${test_mode}
+sh ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-create.sh ${test_mode}
 
 #run mvn clean install
-#cd ${DIR}/product-sp/modules/integration/tests-kubernetes-integration && mvn clean install
+cd ${DIR}/product-sp/modules/integration/tests-kubernetes-integration && mvn clean install
 
 
 
