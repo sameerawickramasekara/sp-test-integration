@@ -14,7 +14,7 @@ then
 elif [ "${db_type}" = "oracle" ]
 then
 
-sqlplus64 'sys/ora12c@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=192.168.48.111) (PORT=1521))(CONNECT_DATA=(SID=ora12c))) as sysdba'  <<EOF
+sqlplus64 ''${db_username}'/'${db_password}'@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST='${db_host}') (PORT=1521))(CONNECT_DATA=(SID=ora12c))) as sysdba'  <<EOF
 	alter session set container=pdbora12c;
 	drop user WSO2_ANALYTICS_DB_SP cascade;
 	create user WSO2_ANALYTICS_DB_SP identified by ora12c ACCOUNT unlock;
