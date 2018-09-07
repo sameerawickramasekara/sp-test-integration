@@ -26,8 +26,13 @@ PROP_OS=OS                       #OS name e.g. centos
 PROP_TEST_MODE=TEST_MODE
 PROP_DB_URL=DatabaseHost
 PROP_DB_TYPE=DBEngine
+PROP_PRODUCT_URL=PRODUCT_GIT_URL
+JDK=JDK
+CUSTOM_PACK=CUSTOM_PACK
+CUSTOM_TAG=CUSTOM_TAG
 PROP_DB_UN=db_username
 PROP_DB_PW=db_password
+K8S_MASTER=K8S_MASTER
 
 os=`cat ${FILE2} | grep -w "$PROP_OS" ${FILE1} ${FILE2}| cut -d'=' -f2`
 test_mode=`cat ${FILE2} | grep -w "$PROP_TEST_MODE" ${FILE1} ${FILE2}| cut -d'=' -f2`
@@ -35,34 +40,61 @@ db_url=`cat ${FILE2} | grep -w "$PROP_DB_URL" ${FILE1} | cut -d'=' -f2`
 db_type=`cat ${FILE2} | grep -w "$PROP_DB_TYPE" ${FILE1} ${FILE2} | cut -d'=' -f2`
 db_username=`cat ${FILE2} | grep -w "$PROP_DB_UN" ${FILE1} ${FILE2} | cut -d'=' -f2`
 db_password=`cat ${FILE2} | grep -w "$PROP_DB_PW" ${FILE1} ${FILE2} | cut -d'=' -f2`
-
+jdk=`cat ${FILE2} | grep -w "$JDK" ${FILE1} ${FILE2} | cut -d'=' -f2`
+custom_pack=`cat ${FILE2} | grep -w "$CUSTOM_PACK" ${FILE1} ${FILE2} | cut -d'=' -f2`
+custom_tag=`cat ${FILE2} | grep -w "$CUSTOM_TAG" ${FILE1} ${FILE2} | cut -d'=' -f2`
+k8s_master=`cat ${FILE2} | grep -w "$K8S_MASTER" ${FILE1} ${FILE2} | cut -d'=' -f2`
+product_url=`cat ${FILE2} | grep -w "$PROP_PRODUCT_URL" ${FILE1} ${FILE2} | cut -d'=' -f2`
+#
 echo "Db type is $db_type"
 echo "Db_url is $db_url"
 echo "test mode is $test_mode"
 echo "os is $os"
 echo "username is $db_username"
 echo "password is $db_password"
-
-
+echo "custom pack $custom_pack"
+#
+#
+git clone ${product_url} ${DIR}/product-sp/ || true
 if [ "${test_mode}" = "RELEASE" ]
 then
-  git clone https://github.com/wso2/product-sp.git
   cd ${DIR}/product-sp/
   value=$(git for-each-ref --sort=taggerdate --format '%(refname) %(taggerdate)' refs/tags | tail -1 | cut -d "/" -f 3 | cut -d " " -f 1)
   git checkout tags/$value
 elif  [ "${test_mode}" = "SNAPSHOT" ]
 then
-  git clone https://github.com/wso2/product-sp.git
-else 
+  echo "SNAPSHOT"
+ # git clone https://github.com/wso2/product-sp.git
+else
   echo "nothing matched"
 fi
 
 
 #resource downloading/copying
-#TODO
+resource_path=${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/tmp/files/
+mkdir -p $resource_path
+aws s3 sync s3://sp-docker-resources $resource_path
 
-#Database configuration
+#unzip and remove correct jdk
+unzip -q $resource_path/jdk*.zip -d $resource_path
+rm $resource_path/jdk*.zip
 
+#set docker login data
+
+login_data=$(aws ecr get-login)
+docker_username=$(echo "$login_data" |  cut -d" " -f4)
+docker_password=$(echo "$login_data" |  cut -d" " -f6)
+docker_server=$(echo "$login_data" |  cut -d" " -f9 | cut -d"/" -f3)
+
+
+echo "docker_user="$docker_username > ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-registry.properties
+echo "docker_pw="$docker_password >> ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-registry.properties
+echo "docker_server="$docker_server >> ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-registry.properties
+
+echo "KUBERNETES_MASTER=$k8s_master" > ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/infrastructure-automation/k8s.properties
+#
+##Database configuration
+#
 if [ "${db_url}" != "" ]
 then
 
@@ -73,18 +105,18 @@ then
 
 	if [ "${db_type}" = "mysql" ]
 	then
-		sed -i '/jdbcUrl:/ s/: .*/: '$db_url'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml 
+		sed -i '/jdbcUrl:/ s/: .*/: '$db_url'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
 		sed -i '/driverClassName:/ s/: .*/: com.mysql.jdbc.Driver/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
 
 	elif [ "${db_type}" = "oracle" ]
 	then
 		sed -i '/jdbcUrl:/ s/: .*/: '$db_url'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
-		sed -i '/driverClassName:/ s/: .*/: oracle.jdbc.driver.OracleDriver/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml 
+		sed -i '/driverClassName:/ s/: .*/: oracle.jdbc.driver.OracleDriver/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
 		sed -i '/connectionTestQuery:/ s/: .*/: SELECT 1 FROM DUAL/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
- 
+
 	elif [ "${db_type}" = "mssql" ]
 	then
-		sed -i '/jdbcUrl:/ s/: .*/: '$db_url'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml 
+		sed -i '/jdbcUrl:/ s/: .*/: '$db_url'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
 		sed -i '/driverClassName:/ s/: .*/: com.microsoft.sqlserver.jdbc.SQLServerDriver/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
 
 	else
@@ -93,11 +125,13 @@ then
 fi
 
 #run docker-create
-sh ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-create.sh ${test_mode}
+bash ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-create.sh ${test_mode} ${jdk} ${db_type} ${custom_pack}
+
+#clear docker resources from repository workspace
+rm -rf $resource_path/*
 
 #run mvn clean install
 cd ${DIR}/product-sp/modules/integration/tests-kubernetes-integration && mvn clean install
-
 
 
 
