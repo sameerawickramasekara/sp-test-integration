@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#set -e
-#set -o xtrace
+set -e
+set -o xtrace
 
 DIR=$2
 FILE1=${DIR}/infrastructure.properties
