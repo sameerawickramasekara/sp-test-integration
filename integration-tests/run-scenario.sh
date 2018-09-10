@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
-set -o xtrace
+#set -e
+#set -o xtrace
 
 DIR=$2
 FILE1=${DIR}/infrastructure.properties
@@ -57,7 +57,7 @@ fi
 #TODO
 
 #configure databases
-bash db-config.sh ${db_type} ${db_url} ${db_username} ${db_password}
+bash ${DIR}/integration-tests/db-config.sh ${db_type} ${db_url} ${db_username} ${db_password}
 
 #Database configuration
 
