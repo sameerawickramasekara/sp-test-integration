@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#set -e
-#set -o xtrace
+set -e
+set -o xtrace
 
 DIR=$2
 FILE1=${DIR}/infrastructure.properties
@@ -53,20 +53,14 @@ echo "os is $os"
 echo "username is $db_username"
 echo "password is $db_password"
 echo "custom pack $custom_pack"
-#
-#
-git clone ${product_url} ${DIR}/product-sp/ || true
+
+git clone https://github.com/wso2/product-sp.git ${DIR}/product-sp
+
 if [ "${test_mode}" = "RELEASE" ]
 then
   cd ${DIR}/product-sp/
   value=$(git for-each-ref --sort=taggerdate --format '%(refname) %(taggerdate)' refs/tags | tail -1 | cut -d "/" -f 3 | cut -d " " -f 1)
   git checkout tags/$value
-elif  [ "${test_mode}" = "SNAPSHOT" ]
-then
-  echo "SNAPSHOT"
- # git clone https://github.com/wso2/product-sp.git
-else
-  echo "nothing matched"
 fi
 
 
@@ -78,6 +72,10 @@ aws s3 sync s3://sp-docker-resources $resource_path
 #unzip and remove correct jdk
 unzip -q $resource_path/jdk*.zip -d $resource_path
 rm $resource_path/jdk*.zip
+#configure databases
+bash ${DIR}/integration-tests/db-config.sh ${db_type} ${db_url} ${db_username} ${db_password}
+
+#Database configuration
 
 #set docker login data
 
@@ -98,40 +96,41 @@ echo "KUBERNETES_MASTER=$k8s_master" > ${DIR}/product-sp/modules/integration/tes
 if [ "${db_url}" != "" ]
 then
 
-	DIR1=${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files
+	DOCKER_FILES_DIR=${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files
 
-	sed -i '/username:/ s/: .*/: '$db_username'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
-	sed -i '/password:/ s/: .*/: '$db_password'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
+	sed -i '/username:/ s/: .*/: '$db_username'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+	sed -i '/password:/ s/: .*/: '$db_password'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
 
 	if [ "${db_type}" = "mysql" ]
 	then
-		sed -i '/jdbcUrl:/ s/: .*/: '$db_url'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
-		sed -i '/driverClassName:/ s/: .*/: com.mysql.jdbc.Driver/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
+		sed -i '/jdbcUrl:/ s/: .*/: jdbc:mysql:\/\/'$db_url'\/WSO2_ANALYTICS_DB?useSSL=false/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/driverClassName:/ s/: .*/: com.mysql.jdbc.Driver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
 
 	elif [ "${db_type}" = "oracle" ]
 	then
-		sed -i '/jdbcUrl:/ s/: .*/: '$db_url'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
-		sed -i '/driverClassName:/ s/: .*/: oracle.jdbc.driver.OracleDriver/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
-		sed -i '/connectionTestQuery:/ s/: .*/: SELECT 1 FROM DUAL/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
-
+		sed -i '/jdbcUrl:/ s/: .*/: jdbc:oracle:thin:@'$db_url':1521:ORCL/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/driverClassName:/ s/: .*/: oracle.jdbc.driver.OracleDriver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/connectionTestQuery:/ s/: .*/: SELECT 1 FROM DUAL/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+ 
 	elif [ "${db_type}" = "mssql" ]
 	then
-		sed -i '/jdbcUrl:/ s/: .*/: '$db_url'/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
-		sed -i '/driverClassName:/ s/: .*/: com.microsoft.sqlserver.jdbc.SQLServerDriver/' ${DIR1}/deployment-ha-node-1.yaml ${DIR1}/deployment-ha-node-2.yaml
+		sed -i '/jdbcUrl:/ s/: .*/: jdbc:sqlserver:\/\/'$db_url':1433;databaseName=WSO2_ANALYTICS_DB/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/driverClassName:/ s/: .*/: com.microsoft.sqlserver.jdbc.SQLServerDriver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
 
 	else
-		echo "Nothing matched"
+		echo "DB type is not matched"
 	fi
 fi
 
 #run docker-create
-bash ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-create.sh ${test_mode} ${jdk} ${db_type} ${custom_pack}
+bash ${DOCKER_FILES_DIR}/docker-create.sh ${test_mode} ${jdk} ${db_type} ${custom_pack}
 
 #clear docker resources from repository workspace
 rm -rf $resource_path/*
 
 #run mvn clean install
 cd ${DIR}/product-sp/modules/integration/tests-kubernetes-integration && mvn clean install
+
 
 
 
