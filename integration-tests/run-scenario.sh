@@ -56,6 +56,9 @@ fi
 #resource downloading/copying
 #TODO
 
+#configure databases
+bash ${DIR}/integration-tests/db-config.sh ${db_type} ${db_url} ${db_username} ${db_password}
+
 #Database configuration
 
 if [ "${db_url}" != "" ]
@@ -68,18 +71,18 @@ then
 
 	if [ "${db_type}" = "mysql" ]
 	then
-		sed -i '/jdbcUrl:/ s/: .*/: '$db_url'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml 
+		sed -i '/jdbcUrl:/ s/: .*/: jdbc:mysql:\/\/'$db_url'\/WSO2_ANALYTICS_DB?useSSL=false/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml 
 		sed -i '/driverClassName:/ s/: .*/: com.mysql.jdbc.Driver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
 
 	elif [ "${db_type}" = "oracle" ]
 	then
-		sed -i '/jdbcUrl:/ s/: .*/: '$db_url'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/jdbcUrl:/ s/: .*/: jdbc:oracle:thin:@'$db_url':1521:ORCL/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
 		sed -i '/driverClassName:/ s/: .*/: oracle.jdbc.driver.OracleDriver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml 
 		sed -i '/connectionTestQuery:/ s/: .*/: SELECT 1 FROM DUAL/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
  
 	elif [ "${db_type}" = "mssql" ]
 	then
-		sed -i '/jdbcUrl:/ s/: .*/: '$db_url'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml 
+		sed -i '/jdbcUrl:/ s/: .*/: jdbc:sqlserver:\/\/'$db_url':1433;databaseName=WSO2_ANALYTICS_DB/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml 
 		sed -i '/driverClassName:/ s/: .*/: com.microsoft.sqlserver.jdbc.SQLServerDriver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
 
 	else
