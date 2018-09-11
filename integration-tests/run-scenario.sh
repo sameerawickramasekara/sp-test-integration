@@ -43,6 +43,9 @@ echo "OS is $os"
 echo "Username is $db_username"
 echo "Password is $db_password"
 
+
+INTG_TEST_DIR=$(cd `dirname $0` && pwd)
+
 git clone https://github.com/wso2/product-sp.git ${DIR}/product-sp
 
 if [ "${test_mode}" = "RELEASE" ]
@@ -53,11 +56,14 @@ then
 fi
 
 
+
 #resource downloading/copying
 #TODO
 
 #configure databases
-bash ${DIR}/integration-tests/db-config.sh ${db_type} ${db_url} ${db_username} ${db_password}
+cd ${INTG_TEST_DIR}
+pwd
+bash db-config.sh ${db_type} ${db_url} ${db_username} ${db_password}
 
 #Database configuration
 
@@ -65,25 +71,25 @@ if [ "${db_url}" != "" ]
 then
 
 	DOCKER_FILES_DIR=${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files
-
-	sed -i '/username:/ s/: .*/: '$db_username'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
-	sed -i '/password:/ s/: .*/: '$db_password'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+	
+	sed -i '/name: WSO2_CARBON_DB/,/username:.*/s/username:.*/username: '${db_username}'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+	sed -i '/name: WSO2_CARBON_DB/,/password:.*/s/password:.*/password: '${db_password}'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
 
 	if [ "${db_type}" = "mysql" ]
 	then
-		sed -i '/jdbcUrl:/ s/: .*/: jdbc:mysql:\/\/'$db_url'\/WSO2_ANALYTICS_DB?useSSL=false/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml 
-		sed -i '/driverClassName:/ s/: .*/: com.mysql.jdbc.Driver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/name: WSO2_CARBON_DB/,/jdbcUrl:.*/s/jdbcUrl:.*/jdbcUrl: 'jdbc:mysql:\\/\\/${db_url}\\/WSO2_ANALYTICS_DB_SP?useSSL=false'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/name: WSO2_CARBON_DB/,/driverClassName:.*/s/driverClassName:.*/driverClassName: com.mysql.jdbc.Driver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
 
 	elif [ "${db_type}" = "oracle" ]
 	then
-		sed -i '/jdbcUrl:/ s/: .*/: jdbc:oracle:thin:@'$db_url':1521:ORCL/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
-		sed -i '/driverClassName:/ s/: .*/: oracle.jdbc.driver.OracleDriver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml 
-		sed -i '/connectionTestQuery:/ s/: .*/: SELECT 1 FROM DUAL/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/name: WSO2_CARBON_DB/,/jdbcUrl:.*/s/jdbcUrl:.*/jdbcUrl: 'jdbc:oracle:thin:${db_url}:1521:ORCL'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/name: WSO2_CARBON_DB/,/driverClassName:.*/s/driverClassName:.*/driverClassName: oracle.jdbc.driver.OracleDriver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/name: WSO2_CARBON_DB/,/connectionTestQuery:.*/s/connectionTestQuery:.*/connectionTestQuery: SELECT 1 FROM DUAL/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
  
 	elif [ "${db_type}" = "mssql" ]
 	then
-		sed -i '/jdbcUrl:/ s/: .*/: jdbc:sqlserver:\/\/'$db_url':1433;databaseName=WSO2_ANALYTICS_DB/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml 
-		sed -i '/driverClassName:/ s/: .*/: com.microsoft.sqlserver.jdbc.SQLServerDriver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/name: WSO2_CARBON_DB/,/jdbcUrl:.*/s/jdbcUrl:.*/jdbcUrl: 'jdbc:sqlserver:\\/\\/${db_url}:1433\;databaseName=WSO2_ANALYTICS_DB_SP'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
+		sed -i '/name: WSO2_CARBON_DB/,/driverClassName:.*/s/driverClassName:.*/driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
 
 	else
 		echo "DB type is not matched"
