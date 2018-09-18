@@ -54,6 +54,9 @@ echo "username is $db_username"
 echo "password is $db_password"
 echo "custom pack $custom_pack"
 
+
+INTG_TEST_DIR=$(cd `dirname $0` && pwd)
+
 git clone https://github.com/wso2/product-sp.git ${DIR}/product-sp
 
 if [ "${test_mode}" = "RELEASE" ]
@@ -62,6 +65,7 @@ then
   value=$(git for-each-ref --sort=taggerdate --format '%(refname) %(taggerdate)' refs/tags | tail -1 | cut -d "/" -f 3 | cut -d " " -f 1)
   git checkout tags/$value
 fi
+
 
 
 #resource downloading/copying
@@ -73,54 +77,9 @@ aws s3 sync s3://sp-docker-resources $resource_path
 unzip -q $resource_path/jdk*.zip -d $resource_path
 rm $resource_path/jdk*.zip
 #configure databases
-bash ${DIR}/integration-tests/db-config.sh ${db_type} ${db_url} ${db_username} ${db_password}
-
-#Database configuration
-
-#set docker login data
-
-login_data=$(aws ecr get-login)
-docker_username=$(echo "$login_data" |  cut -d" " -f4)
-docker_password=$(echo "$login_data" |  cut -d" " -f6)
-docker_server=$(echo "$login_data" |  cut -d" " -f9 | cut -d"/" -f3)
-
-
-echo "docker_user="$docker_username > ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-registry.properties
-echo "docker_pw="$docker_password >> ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-registry.properties
-echo "docker_server="$docker_server >> ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-registry.properties
-
-echo "KUBERNETES_MASTER=$k8s_master" > ${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/infrastructure-automation/k8s.properties
-#
-##Database configuration
-#
-if [ "${db_url}" != "" ]
-then
-
-	DOCKER_FILES_DIR=${DIR}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files
-
-	sed -i '/username:/ s/: .*/: '$db_username'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
-	sed -i '/password:/ s/: .*/: '$db_password'/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
-
-	if [ "${db_type}" = "mysql" ]
-	then
-		sed -i '/jdbcUrl:/ s/: .*/: jdbc:mysql:\/\/'$db_url'\/WSO2_ANALYTICS_DB?useSSL=false/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
-		sed -i '/driverClassName:/ s/: .*/: com.mysql.jdbc.Driver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
-
-	elif [ "${db_type}" = "oracle" ]
-	then
-		sed -i '/jdbcUrl:/ s/: .*/: jdbc:oracle:thin:@'$db_url':1521:ORCL/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
-		sed -i '/driverClassName:/ s/: .*/: oracle.jdbc.driver.OracleDriver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
-		sed -i '/connectionTestQuery:/ s/: .*/: SELECT 1 FROM DUAL/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
- 
-	elif [ "${db_type}" = "mssql" ]
-	then
-		sed -i '/jdbcUrl:/ s/: .*/: jdbc:sqlserver:\/\/'$db_url':1433;databaseName=WSO2_ANALYTICS_DB/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
-		sed -i '/driverClassName:/ s/: .*/: com.microsoft.sqlserver.jdbc.SQLServerDriver/' ${DOCKER_FILES_DIR}/deployment-ha-node-1.yaml ${DOCKER_FILES_DIR}/deployment-ha-node-2.yaml
-
-	else
-		echo "DB type is not matched"
-	fi
-fi
+cd ${INTG_TEST_DIR}
+pwd
+bash db-config.sh ${db_type} ${db_url} ${db_username} ${db_password}
 
 #run docker-create
 bash ${DOCKER_FILES_DIR}/docker-create.sh ${test_mode} ${jdk} ${db_type} ${custom_pack}
