@@ -236,7 +236,7 @@ else
   ecr_login=$(aws ecr get-login)
   reg_user=$(echo $ecr_login | cut -d' ' -f4)
   reg_password=$(echo $ecr_login | cut -d' ' -f6)
-  reg_url=$(echo $ecr_login | cut -d' ' -f7 | cut -d'/' -f3)
+  reg_url=$(echo $ecr_login | cut -d' ' -f9 | cut -d'/' -f3)
 
   echo "docker_server=$reg_url" > ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-registry.properties
   echo "docker_user=$reg_user" >> ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-registry.properties
