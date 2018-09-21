@@ -267,7 +267,7 @@ else
   kubectl config use-context "$kube_id"
   kubectl config current-context
 
-  cd ${DIR}/product-sp/modules/integration/tests-kubernetes-integration
+  cd ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration
   mvn clean install
 
   kubectl delete namespace "$kube_id"
