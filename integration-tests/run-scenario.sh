@@ -249,7 +249,9 @@ else
   cd ${prgdir}
 
   #configure kubectl
-  kube_id=${os}-${db}
+  NEW_UUID=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1)
+
+  kube_id=${os}-${db}-${NEW_UUID}
   kube_id=$(echo "$kube_id" | sed 's/.*/\L&/')
 
   cp ~/.kube/config ~/.kube/config-"$kube_id"
@@ -276,9 +278,9 @@ else
   #copy the docker resources to correct location
 
   #Get the reports from integration test
-  cp -R ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/target/surefire-reports ${prgdir}/
-  cp ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/target/logs/automation.log ${prgdir}/
-  cp ${prgdir}/storage/output.properties ${prgdir}/
+  cp -R ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/target/surefire-reports ${DIR}/
+  cp ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/target/logs/automation.log ${DIR}/
+  cp ${prgdir}/storage/output.properties ${DIR}/
   
 #   scp -o StrictHostKeyChecking=no -r -i ${key_pem} ${user}@${host}:${REM_DIR}/product-sp/modules/integration/tests-kubernetes-integration/target/surefire-reports ${DIR}
 #   scp -o StrictHostKeyChecking=no -r -i ${key_pem} ${user}@${host}:${REM_DIR}/product-apim/modules/integration/tests-integration/tests-backend/target/logs/automation.log ${DIR}
