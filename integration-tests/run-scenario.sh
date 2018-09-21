@@ -276,7 +276,7 @@ else
   #copy the docker resources to correct location
 
   #Get the reports from integration test
-  cp ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/target/surefire-reports ${prgdir}/
+  cp -R ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/target/surefire-reports ${prgdir}/
   cp ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/target/logs/automation.log ${prgdir}/
   cp ${prgdir}/storage/output.properties ${prgdir}/
   
