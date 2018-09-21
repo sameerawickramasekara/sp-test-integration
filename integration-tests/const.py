@@ -41,7 +41,7 @@ MYSQL_DB_ENGINE = "MYSQL"
 DEFAULT_ORACLE_SID = "orcl"
 DEFAULT_DB_USERNAME = "wso2carbon"
 LOG_STORAGE = "logs"
-TESTNG_DIST_XML_PATH = "modules/integration/tests-integration/tests-backend/src/test/resources/testng.xml"
+TESTNG_DIST_XML_PATH = "modules/integration/tests-kubernetes-integration/src/test/resources/testng.xml"
 TESTNG_SERVER_MGT_DIST = "modules/integration/tests-integration/tests-backend/src/test/resources/testng-server-mgt.xml"
 LOG_FILE_PATHS = {"product-apim": [
     "modules/integration/tests-integration/tests-backend/target/surefire-reports/emailable-report.html",
@@ -62,7 +62,7 @@ DB_META_DATA = {
                                    "WSO2_MB_STORE_DB": ['mb-store/mysql-mb.sql'],
                                    "WSO2_METRICS_DB": ['metrics/mysql.sql']}, "product-is": {},
                   "product-ei": {},
-                  "product-sp": {"WSO2_ANALYTICS_DB_SP": []}}},
+                  "product-sp": {"WSO2_ANALYTICS_DB": []}}},
     "SQLSERVER-SE": {"prefix": "jdbc:sqlserver://",
                      "driverClassName": "com.microsoft.sqlserver.jdbc.SQLServerDriver", "jarName": "sqlserver-ex.jar",
                      "DB_SETUP": {
@@ -71,7 +71,7 @@ DB_META_DATA = {
                                           "WSO2_MB_STORE_DB": ['mb-store/mssql-mb.sql'],
                                           "WSO2_METRICS_DB": ['metrics/mssql.sql']}, "product-is": {},
                          "product-ei": {},
-                         "product-sp": {"WSO2_ANALYTICS_DB_SP": []}}},
+                         "product-sp": {"WSO2_ANALYTICS_DB": []}}},
     "ORACLE-SE2": {"prefix": "jdbc:oracle:thin:@", "driverClassName": "oracle.jdbc.OracleDriver",
                    "jarName": "oracle-se.jar",
                    "DB_SETUP": {
@@ -80,11 +80,11 @@ DB_META_DATA = {
                                         "WSO2_MB_STORE_DB": ['mb-store/oracle-mb.sql'],
                                         "WSO2_METRICS_DB": ['metrics/oracle.sql']}, "product-is": {},
                        "product-ei": {},
-                       "product-sp": {"WSO2_ANALYTICS_DB_SP": []}}},
+                       "product-sp": {"WSO2_ANALYTICS_DB": []}}},
     "POSTGRESQL": {"prefix": "jdbc:postgresql://", "driverClassName": "org.postgresql.Driver",
                    "jarName": "postgres.jar",
                    "DB_SETUP": {"product-apim": {"WSO2_CARBON_DB": [], "WSO2AM_DB": [], "WSO2AM_STATS_DB": [],
                                                  "WSO2_MB_STORE_DB": [], "WSO2_METRICS_DB": [], "product-is": {},
-                                                 "product-ei": {}, "product-sp": {"WSO2_ANALYTICS_DB_SP": []}}}
+                                                 "product-ei": {}, "product-sp": {"WSO2_ANALYTICS_DB": []}}}
                    }}
-DATABASE_NAME = "WSO2_ANALYTICS_DB_SP"
+DATABASE_NAME = "WSO2_ANALYTICS_DB"

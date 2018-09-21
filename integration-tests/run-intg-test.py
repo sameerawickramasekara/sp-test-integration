@@ -646,7 +646,8 @@ def main():
             dist_name = get_dist_name_wum()
 
         elif test_mode == "RELEASE":
-            checkout_to_tag(get_latest_tag_name(product_id))
+            #commented because we need latest changes from product repo
+            # checkout_to_tag(get_latest_tag_name(product_id))
             dist_name = get_dist_name()
             get_latest_released_dist()
         elif test_mode == "SNAPSHOT":
@@ -659,10 +660,11 @@ def main():
         if db_names is None or not db_names:
             raise Exception("Failed the product configuring")
         setup_databases(db_names)
-        intg_module_path = Path(workspace + "/" + product_id + "/" + 'modules/integration')
-        build_module(intg_module_path)
-        save_log_files()
-        create_output_property_fle()
+        # intg_module_path = Path(workspace + "/" + product_id + "/" + 'modules/integration')
+        # build_module(intg_module_path)
+        # save_log_files()
+        # create_output_property_fle()
+        print("Product Configured succesfully")
     except Exception as e:
         logger.error("Error occurred while running the run-intg.py script", exc_info=True)
     except BaseException as e:
