@@ -233,7 +233,7 @@ else
   aws s3 sync s3://sp-docker-resources ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/tmp/files/
 
   
-  ecr_login=$(aws ecr get-login --no-include-email)
+  ecr_login=$(aws ecr get-login)
   reg_user=$(echo $ecr_login | cut -d' ' -f4)
   reg_password=$(echo $ecr_login | cut -d' ' -f6)
   reg_url=$(echo $ecr_login | cut -d' ' -f7 | cut -d'/' -f3)
