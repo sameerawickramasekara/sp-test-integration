@@ -271,11 +271,16 @@ else
   mvn clean install
 
   kubectl delete namespace "$kube_id"
+  rm ~/.kube/config-"$kube_id"
 
   #copy the docker resources to correct location
 
   #Get the reports from integration test
-#   scp -o StrictHostKeyChecking=no -r -i ${key_pem} ${user}@${host}:${REM_DIR}/product-apim/modules/integration/tests-integration/tests-backend/target/surefire-reports ${DIR}
+  cp ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/target/surefire-reports ${prgdir}/
+  cp ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/target/logs/automation.log ${prgdir}/
+  cp ${prgdir}/storage/output.properties ${prgdir}/
+  
+#   scp -o StrictHostKeyChecking=no -r -i ${key_pem} ${user}@${host}:${REM_DIR}/product-sp/modules/integration/tests-kubernetes-integration/target/surefire-reports ${DIR}
 #   scp -o StrictHostKeyChecking=no -r -i ${key_pem} ${user}@${host}:${REM_DIR}/product-apim/modules/integration/tests-integration/tests-backend/target/logs/automation.log ${DIR}
 #   scp -o StrictHostKeyChecking=no -r -i ${key_pem} ${user}@${host}:${REM_DIR}/storage/output.properties ${DIR}
   echo "=== Reports are copied success ==="
