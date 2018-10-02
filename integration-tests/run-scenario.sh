@@ -243,7 +243,7 @@ else
   echo "docker_pw=$reg_password" >> ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/docker-registry.properties
 
   cd ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration/src/test/resources/artifacts/docker-files/
-
+  echo "user is $USER"
   bash docker-create.sh ${test_mode} ${jdk} ${db} ${dist_provided}
 
   cd ${prgdir}
