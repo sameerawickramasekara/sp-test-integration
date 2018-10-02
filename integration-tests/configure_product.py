@@ -26,7 +26,7 @@ import logging
 from const import ZIP_FILE_EXTENSION, NS, SURFACE_PLUGIN_ARTIFACT_ID, CARBON_NAME, VALUE_TAG, \
     DEFAULT_ORACLE_SID, DATASOURCE_PATHS, MYSQL_DB_ENGINE, ORACLE_DB_ENGINE, LIB_PATH, PRODUCT_STORAGE_DIR_NAME, \
     DISTRIBUTION_PATH, MSSQL_DB_ENGINE, M2_PATH, WSO2SERVER, DATABASE_NAME
-import yaml
+from ruamel.yaml import YAML
 
 
 datasource_paths = None
@@ -204,7 +204,7 @@ def update_files():
     global user_value
 
     datasource_paths = DATASOURCE_PATHS[product_id]
-    print(datasource_paths)
+    print("Datasource paths: "+str(datasource_paths))
     for data_source in datasource_paths:
         print("Datasource is "+data_source)
         print("storage dist abs path is : "+str(storage_dist_abs_path))
@@ -212,29 +212,30 @@ def update_files():
         print("file_path is : "+str(file_path))
         if str(file_path).endswith('.yaml'):
             print("filepath file is yaml")
-            with open(file_path) as f:
-                doc = yaml.safe_load(f)
-                print("Current username is : "+doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['username'])
-                print("Current password is : "+doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['password'])
-                print("Current jdbcurl is : "+doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['jdbcUrl'])
-                print("Current driver name is : "+doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['driverClassName'])
-                print("Current connection query value is : "+doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['connectionTestQuery'])
+            yaml = YAML()
+            yaml.preserve_quotes = True
+            doc = Path(file_path)
+            obj = yaml.load(doc)
+            print("Current username is : "+obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['username'])
+            print("Current password is : "+obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['password'])
+            print("Current jdbcurl is : "+obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['jdbcUrl'])
+            print("Current driver name is : "+obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['driverClassName'])
+            print("Current connection query value is : "+obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['connectionTestQuery'])
 
-                doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['password'] = password_value
-                doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['username'] = user_value
-                doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['jdbcUrl'] = url_value
-                doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['driverClassName'] = drive_class_name_value
-                if ORACLE_DB_ENGINE == database_config['db_engine'].upper():
-                    doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['connectionTestQuery'] = validation_query_value
+            obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['password'] = password_value
+            obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['username'] = user_value
+            obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['jdbcUrl'] = url_value
+            obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['driverClassName'] = drive_class_name_value
+            if ORACLE_DB_ENGINE == database_config['db_engine'].upper():
+                obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['connectionTestQuery'] = validation_query_value
 
-                print("Changed username is : "+doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['username'])
-                print("Changed password is : "+doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['password'])
-                print("Changed  jdbcurl is : "+doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['jdbcUrl'])
-                print("Changed driver name is : "+doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['driverClassName'])
-                print("Changed connection query value is : "+doc['wso2.datasources']['dataSources'][0]['definition']['configuration']['connectionTestQuery'])
+            print("Changed username is : "+obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['username'])
+            print("Changed password is : "+obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['password'])
+            print("Changed  jdbcurl is : "+obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['jdbcUrl'])
+            print("Changed driver name is : "+obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['driverClassName'])
+            print("Changed connection query value is : "+obj['wso2.datasources']['dataSources'][0]['definition']['configuration']['connectionTestQuery'])
 
-            with open(file_path, 'w') as f:
-                yaml.safe_dump(doc, f, default_flow_style=False)
+            yaml.dump(obj, doc)
 
         elif str(file_path).endswith('.xml'):
             print("filepath is xml")
