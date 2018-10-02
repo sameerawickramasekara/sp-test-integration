@@ -4,3 +4,4 @@ pymysql==0.9.0
 sqlparse==0.2.4
 requests==2.19.1
 PyYAML==3.13
+ruamel.yaml==0.15.71
