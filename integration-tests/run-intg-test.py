@@ -340,6 +340,8 @@ def get_dist_name():
     product_version = parent.find('d:version', NS).text
     print("ProdVersion" + product_version)
     dist_name = artifact_id + "-" + product_version
+    #temp_additoin
+    dist_name = "wso2sp-4.4.0-m1"
     dist_zip_name = dist_name + ZIP_FILE_EXTENSION
     return dist_name
 
