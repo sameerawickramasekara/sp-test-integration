@@ -270,7 +270,7 @@ else
   kubectl config current-context
 
   cd ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration
-  mvn clean install
+  mvn clean install -B
 
   kubectl delete namespace "$kube_id"
   rm ~/.kube/config-"$kube_id"
