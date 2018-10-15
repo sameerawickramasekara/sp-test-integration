@@ -272,7 +272,7 @@ else
   cd ${prgdir}/product-sp/modules/integration/tests-kubernetes-integration
   mvn clean install -B
 
-  kubectl delete namespace "$kube_id"
+  #kubectl delete namespace "$kube_id"
   rm ~/.kube/config-"$kube_id"
 
   #copy the docker resources to correct location
